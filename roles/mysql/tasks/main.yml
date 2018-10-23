@@ -1,0 +1,122 @@
+- name: check if pre-installed mariadb exists
+  yum:
+    list: mariadb-libs
+  register: mariadb
+
+- name: uninstall pre-installed mariadb
+  yum:
+    name: mariadb-libs
+    state: absent
+
+- name: remove pre-installed mariadb's file
+  file:
+    path: /var/lib/mysql
+    state: absent
+  when: mariadb.results[0].yumstate == 'installed'
+
+- name: add yum repository
+  yum: 
+    name: "{{ __repo_url }}"
+    state: present
+
+- name: intall yum-utils
+  yum:
+    name: yum-utils
+    state: present
+
+- name: switch yum repository (for version 5.6)
+  shell: |
+    yum-config-manager --disable mysql57-community
+    yum-config-manager --enable mysql56-community
+  when: __version == 5.6 and mariadb.results[0].yumstate == 'installed'
+
+- name: switch yum repository (for version 5.7)
+  shell: |
+    yum-config-manager --disable mysql56-community
+    yum-config-manager --enable mysql57-community
+  when: __version == 5.7 and mariadb.results[0].yumstate == 'installed'
+
+- name: install MySQL{{ __version }}
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - mysql
+    - mysql-devel
+    - mysql-server
+    - mysql-utilities
+    - MySQL-python
+
+- name: start and enable server
+  service:
+    name: mysqld
+    state: started
+    enabled: yes
+
+- name: check if my.cnf.bk already deployed
+  stat:
+    path: "/etc/my.cnf.bk"
+  register: default_my_conf_backup
+
+- name: get default MySQL root users's password
+  shell: |
+    less /var/log/mysqld.log | grep password | awk '{ print $NF }'
+  register: mysql_default_password
+  when: not default_my_conf_backup.stat.exists and __version == 5.7
+
+- name: change password policy
+  shell: |
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_length='{{ __password_length }}';"
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_policy='{{ __password_policy }}';"
+  when: not default_my_conf_backup.stat.exists and __validate_password and __version == 5.7
+
+- name: disable validate password
+  shell: |
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_default_password.stdout }}';"
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "uninstall plugin validate_password;"
+  when: not default_my_conf_backup.stat.exists and not __validate_password and __version == 5.7
+
+- name: change root user password (for version 5.6)
+  shell: |
+    /usr/bin/mysqladmin -u root password "{{ __root_new_password }}"
+  when: not default_my_conf_backup.stat.exists and __version == 5.6
+
+- name: change root user password (for version 5.7)
+  shell: |
+    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ __root_new_password }}';"
+  when: not default_my_conf_backup.stat.exists and __version == 5.7
+
+- name: backup default my.cnf
+  shell: |
+    mv /etc/my.cnf /etc/my.cnf.bk
+  when: not default_my_conf_backup.stat.exists
+
+- name: deploy my.cnf
+  template:
+    src: "my.cnf_{{ __version }}.j2"
+    dest: "/etc/my.cnf"
+    owner: root
+    group: root
+    mode: 0644
+  when: not default_my_conf_backup.stat.exists
+  notify: restart mysqld
+
+- name: create database [{{ __project_db_name }}]
+  mysql_db:
+    login_user: root
+    login_password: "{{ __root_new_password }}"
+    name: "{{ __project_db_name }}"
+    state: present
+    encoding: "{{ __project_db_encoding }}"
+  when: __project_db_create
+
+- name: create MySQL user [{{ __project_db_user_name }}] for database [{{ __project_db_name }}]
+  mysql_user:
+    login_user: root
+    login_password: "{{ __root_new_password }}"
+    user: "{{ __project_db_user_name }}"
+    password: "{{ __project_db_user_password }}"
+    host: localhost
+    priv: "{{ __project_db_name }}.*:ALL,GRANT"
+    state: present
+  when: __project_db_create
