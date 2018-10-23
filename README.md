@@ -3,7 +3,8 @@ Infra automation for rails, nodejs, mysql, redis, elasticsearch on vagrant using
 
 # Default Version
 
-- Ruby 2.4.2
+- Ruby 2.5.1
+- Rails 5.2.1
 - MySQL 5.7
 - Redis stable
 - Elasticsearch 5.6
@@ -20,42 +21,18 @@ e.g. if you prefer to use Ubuntu, you have to replace `yum` with `apt-get`<br>
 
 # Pre-Setting
 
-1. copy `ansible.cfg.example` as `ansible.cfg` and edit.
-
-change ssh config file location `/Users/eclair/.ssh/eclair-config`
-
-```
-ssh_args = -o ControlPersist=15m -F /Users/eclair/.ssh/eclair-config -q
-```
-
-2. copy `hosts.example` as `hosts` and edit.
-
-change host name `eclair`
-
-```
-eclair
-```
-
-3. copy `site.yml.example` as `site.yml` and edit.
-
-change host name `eclair`
-
-```
-- hosts: eclair
-```
-
-4. copy `Vagrantfile.example` as `Vagrantfile` and edit as you need, or locate your own `Vagrantfile`.
+ edit `Vagrantfile` as you need.
 
 # How to use
 
 ```
-$ cd eclair
-$ ansible-playbook site.yml
+$ cd your_directory
+$ vagrant up
 ```
 
 # Destroy and Recreate
 
 ```
-$ cd eclair
+$ cd your_directory
 $ sh reset.sh
 ```

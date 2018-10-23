@@ -1,0 +1,12 @@
+- hosts: vagrants
+  roles:
+    - init
+    - mysql
+    - ruby
+    - nodejs
+    - redis
+    - elasticsearch
+    - nginx
+  vars:
+    __working_user: vagrant
+    __app_dir: ~/eclair
