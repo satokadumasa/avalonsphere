@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
   # config.vm.network "private_network", ip: "192.168.33.10"
   config.vm.network "public_network"#, ip: "192.168.1.10", bridge: "en0: Wi-Fi (AirPort)"
   config.vm.network "forwarded_port", guest: 80, host: 8080
-  # config.vm.synced_folder "../../Project", "/home/vagrant/Project", owner: "vagrant", group: "vagrant"
+  config.vm.synced_folder "./Project", "/home/vagrant/Project", owner: "vagrant", group: "vagrant"
 
   # Create a public network, which generally matched to bridged network.
   # Bridged networks make the machine appear as another physical device on

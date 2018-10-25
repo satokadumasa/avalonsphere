@@ -16,3 +16,5 @@ fi
 PATH=$PATH:$HOME/.local/bin:$HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
 
 export PATH
+export DB_NAME=avalonsphere
+export DB_HOST=localhost

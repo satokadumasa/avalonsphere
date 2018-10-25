@@ -1,0 +1,2 @@
+export DB_PASS={print 1}
+export FFF=saaa

@@ -24,17 +24,11 @@
     name: yum-utils
     state: present
 
-- name: switch yum repository (for version 5.6)
-  shell: |
-    yum-config-manager --disable mysql57-community
-    yum-config-manager --enable mysql56-community
-  when: __version == 5.6 and mariadb.results[0].yumstate == 'installed'
 
 - name: switch yum repository (for version 5.7)
   shell: |
     yum-config-manager --disable mysql56-community
     yum-config-manager --enable mysql57-community
-  when: __version == 5.7 and mariadb.results[0].yumstate == 'installed'
 
 - name: install MySQL{{ __version }}
   yum:
@@ -62,29 +56,11 @@
   shell: |
     less /var/log/mysqld.log | grep password | awk '{ print $NF }'
   register: mysql_default_password
-  when: not default_my_conf_backup.stat.exists and __version == 5.7
-
-- name: change password policy
-  shell: |
-    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_length='{{ __password_length }}';"
-    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "SET GLOBAL validate_password_policy='{{ __password_policy }}';"
-  when: not default_my_conf_backup.stat.exists and __validate_password and __version == 5.7
 
 - name: disable validate password
   shell: |
     mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_default_password.stdout }}';"
     mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "uninstall plugin validate_password;"
-  when: not default_my_conf_backup.stat.exists and not __validate_password and __version == 5.7
-
-- name: change root user password (for version 5.6)
-  shell: |
-    /usr/bin/mysqladmin -u root password "{{ __root_new_password }}"
-  when: not default_my_conf_backup.stat.exists and __version == 5.6
-
-- name: change root user password (for version 5.7)
-  shell: |
-    mysql -u root -p'{{ mysql_default_password.stdout }}' --connect-expired-password -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ __root_new_password }}';"
-  when: not default_my_conf_backup.stat.exists and __version == 5.7
 
 - name: backup default my.cnf
   shell: |
@@ -97,14 +73,25 @@
     dest: "/etc/my.cnf"
     owner: root
     group: root
-    mode: 0644
   when: not default_my_conf_backup.stat.exists
   notify: restart mysqld
+
+- name: get temporary password
+  shell: cat /var/log/mysqld.log | grep "temporary password" | awk '{print $11}'
+  register: mysql_default_password
+
+- name: 環境変数設定
+  shell: |
+    echo "export DB_USER=root" >> ~/.bash_profile
+    echo "export DB_PASS={{ mysql_default_password.stdout }}" >> ~/.bash_profile
+    source ~/.bash_profile
+  become_user: "vagrant"
+
 
 - name: create database [{{ __project_db_name }}]
   mysql_db:
     login_user: root
-    login_password: "{{ __root_new_password }}"
+    login_password: "{{ mysql_default_password.stdout }}"
     name: "{{ __project_db_name }}"
     state: present
     encoding: "{{ __project_db_encoding }}"
@@ -113,9 +100,9 @@
 - name: create MySQL user [{{ __project_db_user_name }}] for database [{{ __project_db_name }}]
   mysql_user:
     login_user: root
-    login_password: "{{ __root_new_password }}"
+    login_password: "{{ mysql_default_password.stdout }}"
     user: "{{ __project_db_user_name }}"
-    password: "{{ __project_db_user_password }}"
+    password: "{{ mysql_default_password.stdout }}"
     host: localhost
     priv: "{{ __project_db_name }}.*:ALL,GRANT"
     state: present

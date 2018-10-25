@@ -64,3 +64,11 @@
   become_user: "{{ __working_user }}"
   when: current_ruby_version.stdout != __version
 
+- name: Install bundler
+  gem:
+    name: bundler
+    executable: ~/.rbenv/shims/gem
+  become_user: "{{ __working_user }}"
+
+- name: gem install rails
+  gem: name=rails executable=.rbenv/shims/gem user_install=False
