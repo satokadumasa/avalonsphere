@@ -1,93 +1,51 @@
 #!/bin/bash
-#
-# railsapp
-
-# chkconfig: 2345 82 55
-# processname: railsapp
-# description: Runs railsapp for nginx integration.
-
-# Include RedHat function library
-. /etc/rc.d/init.d/functions
-
-# The name of the service
-NAME=avalonsphere
-
-# The username and path to the myapp source
-USER=vagrant
-APP_PATH=/home/$USER/Project/$NAME
-
-# The PID and LOCK files used by puma and sidekiq
-UPID=$APP_PATH/tmp/pids/puma.pid
-ULOCK=/var/lock/subsys/$NAME
-
-# The options to use when running puma
-#OPTS="-F $APP_PATH/config/puma.rb"
-
-# Ruby related path update
-RUBY_PATH_PATCH="PATH=$PATH:/usr/local/bin:/usr/local/lib && export PATH && "
-BUNDLE_CMD=bundle
-PUMA_CMD=pumactl
-. /etc/profile.d/rbenv.sh
-
+ 
+NAME=puma # 変更なし
+USER=vagrant # centOSのuserに変更
+APP_NAME=avalonsphere # RailsのAppの名前に変更
+APP_DIR=/home/$USER/Project/$APP_NAME # Railsをおいているディレクトリに変更
+TMP_DIR=$APP_DIR/tmp
+PID_DIR=$TMP_DIR/pids
+SOCKET_DIR=$TMP_DIR/sockets
+LOG_DIR=$TMP_DIR/logs
+ 
+RAILS_ENV=production
+ 
+sudo -u $USER -H sh -c "mkdir -p $PID_DIR"
+sudo -u $USER -H sh -c "mkdir -p $SOCKET_DIR"
+sudo -u $USER -H sh -c "mkdir -p $LOG_DIR"
+ 
+PIDFILE=$PID_DIR/puma.pid
+ 
+ 
 start() {
-  cd $APP_PATH
-  # Start puma
-  echo -n $"Starting $NAME: "
-  daemon --pidfile=$UPID --user=$USER $BUNDLE_CMD exec $PUMA_CMD $OPTS start
-  puma=$?
-  [ $puma -eq 0 ] && touch $ULOCK
-  echo
-
-  return $puma
+  cd $APP_DIR;
+  sudo -u $USER /bin/bash -lc "RAILS_ENV=production bundle exec rails s &"
 }
-
+ 
 stop() {
-  cd $APP_PATH
-
-  # Stop puma
-  echo -n $"Stopping $NAME: "
-  killproc -p $UPID
-  puma=$?
-  [ $puma -eq 0 ] && rm -f $ULOCK
-  echo
-
-  return $puma
+  echo -n "Stopping puma"
+  kill -s SIGTERM `cat $PIDFILE`
 }
-
+ 
 restart() {
   stop
   start
 }
-
-get_status() {
-  status -p $UPID $NAME
-}
-
-query_status() {
-  get_status >/dev/null 2>&1
-}
-
+ 
 case "$1" in
   start)
-    query_status && exit 0
     start
     ;;
   stop)
-    query_status || exit 0
     stop
     ;;
   restart)
     restart
     ;;
-  status)
-    get_status
-    exit $?
-    ;;
   *)
     N=/etc/init.d/$NAME
-    echo "Usage: $N {start|stop|restart|status}" >&2
+    echo "Usage: $N {start|stop|restart}" >&2
     exit 1
     ;;
 esac
-
-exit 0

@@ -1,9 +1,9 @@
 - hosts: vagrants
   roles:
-    # - init
-    # - mysql
-    # - ruby
-    # - nodejs
+    - init
+    - mysql
+    - ruby
+    - nodejs
     # - redis
     # - elasticsearch
     - avalonsphere

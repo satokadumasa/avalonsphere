@@ -1,6 +1,6 @@
 - name: Bundle install
   shell: |
-    /bin/bash -lc "bundle install --path vendor/bundle"
+    /bin/bash -lc "bundle install --path vendor/bundler"
   args:
     chdir: ~/Project/avalonsphere
   become_user: "vagrant"
@@ -15,5 +15,6 @@
 
 - name: start puma
   shell: |
+    /bin/bash -lc "sudo chkconfig --add puma"
     /bin/bash -lc "sudo service puma start"
   become_user: "vagrant"
