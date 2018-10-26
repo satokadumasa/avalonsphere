@@ -1,11 +1,12 @@
 - hosts: vagrants
   roles:
-    - init
-    - mysql
-    - ruby
-    - nodejs
-    - redis
-    - elasticsearch
+    # - init
+    # - mysql
+    # - ruby
+    # - nodejs
+    # - redis
+    # - elasticsearch
+    - avalonsphere
     - nginx
   vars:
     __working_user: vagrant

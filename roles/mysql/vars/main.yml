@@ -4,7 +4,9 @@ __repo_url: https://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rp
 
 # password settings
 __validate_password: True
-
+__password_length: 8
+__password_policy: LOW
+__root_new_password: UzI9ENRvVRhZ4NZdtM4o
 # location of socket file
 __socket_path: default 
 

@@ -7,6 +7,15 @@
   yum:
     name: nginx
     state: latest
+
+- name: deploy nginx.conf
+  template:
+    src: "nginx.conf"
+    dest: "/etc/nginx/nginx.conf"
+    owner: root
+    group: root
+    mode: 0644
+
 # Nginxを起動
 - name: NGINX | Starting NGINX
   service:
