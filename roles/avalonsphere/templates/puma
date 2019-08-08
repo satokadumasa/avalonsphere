@@ -15,7 +15,7 @@ sudo -u $USER -H sh -c "mkdir -p $PID_DIR"
 sudo -u $USER -H sh -c "mkdir -p $SOCKET_DIR"
 sudo -u $USER -H sh -c "mkdir -p $LOG_DIR"
  
-PIDFILE=$PID_DIR/puma.pid
+PIDFILE=$PID_DIR/server.pid
  
  
 start() {
@@ -25,7 +25,7 @@ start() {
  
 stop() {
   echo -n "Stopping puma"
-  kill -s SIGTERM `cat $PIDFILE`
+  kill -s TERM `cat $PIDFILE`
 }
  
 restart() {

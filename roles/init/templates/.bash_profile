@@ -14,6 +14,8 @@ if [ -d "${HOME}/.bash.d" ] ; then
 fi
 
 PATH=$PATH:$HOME/.local/bin:$HOME/bin:/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/bin
+export PATH=~/.rbenv/bin:~/.rbenv/shims:$PATH
+eval "$(rbenv init -)"
 
 export PATH
 export DB_NAME=avalonsphere

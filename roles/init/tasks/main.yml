@@ -24,3 +24,11 @@
     regexp: "^LANG="
     line: "LANG={{ __locale }}"
     backup: yes
+
+- name: deploy yum.conf
+  template:
+    src: "yum.conf"
+    dest: "/etc/yum.conf"
+    owner: root
+    group: root
+    mode: 0644

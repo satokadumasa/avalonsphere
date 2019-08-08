@@ -58,7 +58,7 @@
 - name: install ruby
   shell: |
     /bin/bash -lc "rbenv install {{ __version }}"
-    /bin/bash -lc "gem install bundler"
+    /bin/bash -lc "gem install bundler -v 1.16.1"
     /bin/bash -lc "rbenv rehash"
     /bin/bash -lc "rbenv local {{ __version }}"
   become_user: "{{ __working_user }}"

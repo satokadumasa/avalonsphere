@@ -13,6 +13,7 @@
 /Project/avalonsphere/tmp/*
 !/Project/avalonsphere/log/.keep
 !/Project/avalonsphere/tmp/.keep
+/Project/avalonsphere/yarn.lock
 
 # Ignore uploaded files in development
 /Project/avalonsphere/storage/*
